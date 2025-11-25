@@ -6,39 +6,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- =============================================
--- DROP EXISTING OBJECTS (for clean re-runs)
+-- DROP EXISTING TABLES (CASCADE removes policies, triggers, indexes)
 -- =============================================
 
--- Drop triggers first
-DROP TRIGGER IF EXISTS update_rooms_updated_at ON rooms;
-DROP TRIGGER IF EXISTS update_boxes_updated_at ON boxes;
-DROP TRIGGER IF EXISTS update_items_updated_at ON items;
-
--- Drop policies
-DROP POLICY IF EXISTS "Users can view their own rooms" ON rooms;
-DROP POLICY IF EXISTS "Users can create their own rooms" ON rooms;
-DROP POLICY IF EXISTS "Users can update their own rooms" ON rooms;
-DROP POLICY IF EXISTS "Users can delete their own rooms" ON rooms;
-
-DROP POLICY IF EXISTS "Users can view their own boxes" ON boxes;
-DROP POLICY IF EXISTS "Users can create their own boxes" ON boxes;
-DROP POLICY IF EXISTS "Users can update their own boxes" ON boxes;
-DROP POLICY IF EXISTS "Users can delete their own boxes" ON boxes;
-
-DROP POLICY IF EXISTS "Users can view their own items" ON items;
-DROP POLICY IF EXISTS "Users can create their own items" ON items;
-DROP POLICY IF EXISTS "Users can update their own items" ON items;
-DROP POLICY IF EXISTS "Users can delete their own items" ON items;
-
-DROP POLICY IF EXISTS "Users can view their own shares" ON shares;
-DROP POLICY IF EXISTS "Anyone can view public shares" ON shares;
-DROP POLICY IF EXISTS "Users can create their own shares" ON shares;
-DROP POLICY IF EXISTS "Users can delete their own shares" ON shares;
-
-DROP POLICY IF EXISTS "Users can view their own activities" ON activities;
-DROP POLICY IF EXISTS "Users can create their own activities" ON activities;
-
--- Drop tables (in correct order due to foreign keys)
 DROP TABLE IF EXISTS activities CASCADE;
 DROP TABLE IF EXISTS shares CASCADE;
 DROP TABLE IF EXISTS items CASCADE;
@@ -46,7 +16,7 @@ DROP TABLE IF EXISTS boxes CASCADE;
 DROP TABLE IF EXISTS rooms CASCADE;
 
 -- Drop function
-DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
 
 -- =============================================
 -- CREATE TABLES
@@ -223,8 +193,3 @@ CREATE TRIGGER update_boxes_updated_at
 CREATE TRIGGER update_items_updated_at
   BEFORE UPDATE ON items
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- =============================================
--- SUCCESS MESSAGE
--- =============================================
--- If you see this, the schema was created successfully!
