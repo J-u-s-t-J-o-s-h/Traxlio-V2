@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { motion } from 'framer-motion';
 import { Item } from '@/lib/types';
@@ -21,6 +21,19 @@ interface DraggableItemCardProps {
   onDragEnd?: () => void;
 }
 
+// Global state for touch drag
+let globalDragData: { itemId: string; itemName: string } | null = null;
+let globalDragElement: HTMLDivElement | null = null;
+
+export const getDragData = () => globalDragData;
+export const clearDragData = () => {
+  globalDragData = null;
+  if (globalDragElement) {
+    globalDragElement.remove();
+    globalDragElement = null;
+  }
+};
+
 export const DraggableItemCard: React.FC<DraggableItemCardProps> = ({
   item,
   onEdit,
@@ -34,6 +47,8 @@ export const DraggableItemCard: React.FC<DraggableItemCardProps> = ({
   onDragEnd,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const isDraggingRef = useRef(false);
 
   const handleClick = () => {
     if (selectable && onSelect) {
@@ -41,6 +56,7 @@ export const DraggableItemCard: React.FC<DraggableItemCardProps> = ({
     }
   };
 
+  // HTML5 Drag handlers (for desktop)
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     e.dataTransfer.setData('text/plain', JSON.stringify({ itemId: item.id, itemName: item.name }));
     e.dataTransfer.effectAllowed = 'move';
@@ -50,12 +66,128 @@ export const DraggableItemCard: React.FC<DraggableItemCardProps> = ({
     onDragStart?.(item);
   };
 
-  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragEnd = () => {
     if (cardRef.current) {
       cardRef.current.style.opacity = '1';
     }
     onDragEnd?.();
   };
+
+  // Touch handlers (for mobile)
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!draggable) return;
+    
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    
+    // Store drag data globally for drop targets to access
+    globalDragData = { itemId: item.id, itemName: item.name };
+  }, [draggable, item.id, item.name]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!draggable || !touchStartRef.current) return;
+    
+    const touch = e.touches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    
+    // Start dragging after 10px movement
+    if (!isDraggingRef.current && (deltaX > 10 || deltaY > 10)) {
+      isDraggingRef.current = true;
+      
+      if (cardRef.current) {
+        cardRef.current.style.opacity = '0.5';
+      }
+      
+      // Create floating drag preview
+      if (!globalDragElement) {
+        globalDragElement = document.createElement('div');
+        globalDragElement.className = 'fixed pointer-events-none z-[9999] bg-emerald-500/90 text-white px-4 py-2 rounded-lg shadow-2xl font-medium text-sm backdrop-blur-sm';
+        globalDragElement.innerHTML = `
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="9" y1="9" x2="15" y2="9" />
+              <line x1="9" y1="13" x2="15" y2="13" />
+            </svg>
+            <span>${item.name}</span>
+          </div>
+        `;
+        document.body.appendChild(globalDragElement);
+      }
+      
+      onDragStart?.(item);
+    }
+    
+    // Update floating element position
+    if (isDraggingRef.current && globalDragElement) {
+      globalDragElement.style.left = `${touch.clientX - 60}px`;
+      globalDragElement.style.top = `${touch.clientY - 20}px`;
+      
+      // Check what element is under the touch point
+      const elementsBelow = document.elementsFromPoint(touch.clientX, touch.clientY);
+      const dropZone = elementsBelow.find(el => el.hasAttribute('data-drop-zone'));
+      
+      // Update all drop zones
+      document.querySelectorAll('[data-drop-zone]').forEach(el => {
+        el.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-100', 'dark:bg-emerald-900/40', 'scale-105');
+      });
+      
+      if (dropZone) {
+        dropZone.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-100', 'dark:bg-emerald-900/40', 'scale-105');
+      }
+    }
+    
+    // Prevent scrolling while dragging
+    if (isDraggingRef.current) {
+      e.preventDefault();
+    }
+  }, [draggable, item, onDragStart]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) {
+      touchStartRef.current = null;
+      globalDragData = null;
+      return;
+    }
+    
+    const touch = e.changedTouches[0];
+    
+    // Find drop target under touch point
+    const elementsBelow = document.elementsFromPoint(touch.clientX, touch.clientY);
+    const dropZone = elementsBelow.find(el => el.hasAttribute('data-drop-zone')) as HTMLElement | undefined;
+    
+    if (dropZone) {
+      // Trigger a custom event for the drop zone to handle
+      const dropEvent = new CustomEvent('touchdrop', {
+        detail: { itemId: item.id, itemName: item.name },
+        bubbles: true,
+      });
+      dropZone.dispatchEvent(dropEvent);
+    }
+    
+    // Clean up
+    if (cardRef.current) {
+      cardRef.current.style.opacity = '1';
+    }
+    
+    // Remove highlighting from all drop zones
+    document.querySelectorAll('[data-drop-zone]').forEach(el => {
+      el.classList.remove('ring-2', 'ring-emerald-500', 'bg-emerald-100', 'dark:bg-emerald-900/40', 'scale-105');
+    });
+    
+    clearDragData();
+    touchStartRef.current = null;
+    isDraggingRef.current = false;
+    onDragEnd?.();
+  }, [item.id, item.name, onDragEnd]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      clearDragData();
+    };
+  }, []);
 
   // Draggable mode
   if (draggable) {
@@ -65,6 +197,9 @@ export const DraggableItemCard: React.FC<DraggableItemCardProps> = ({
         draggable="true"
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className={cn(
           'backdrop-blur-sm rounded-xl border shadow-lg transition-all duration-200',
           'bg-white/80 border-slate-200',

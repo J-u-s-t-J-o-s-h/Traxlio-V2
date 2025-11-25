@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Package, Check } from 'lucide-react';
@@ -23,9 +23,12 @@ export const DroppableBoxZone: React.FC<DroppableBoxZoneProps> = ({
 }) => {
   const [dragOverBoxId, setDragOverBoxId] = useState<string | null>(null);
   const [droppedBoxId, setDroppedBoxId] = useState<string | null>(null);
+  const dropZoneRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const handlersRef = useRef<Map<string, (e: Event) => void>>(new Map());
 
   const otherBoxes = boxes.filter(box => box.id !== currentBoxId);
 
+  // Handle HTML5 drag events (desktop)
   const handleDragOver = (e: React.DragEvent, boxId: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -38,17 +41,102 @@ export const DroppableBoxZone: React.FC<DroppableBoxZoneProps> = ({
 
   const handleDrop = (e: React.DragEvent, targetBoxId: string) => {
     e.preventDefault();
-    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-    const itemId = data.itemId;
-    
-    setDragOverBoxId(null);
-    setDroppedBoxId(targetBoxId);
-    
-    onDropItem(itemId, targetBoxId);
-    
-    // Reset dropped state after animation
-    setTimeout(() => setDroppedBoxId(null), 1000);
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      const itemId = data.itemId;
+      
+      setDragOverBoxId(null);
+      setDroppedBoxId(targetBoxId);
+      
+      onDropItem(itemId, targetBoxId);
+      
+      // Reset dropped state after animation
+      setTimeout(() => setDroppedBoxId(null), 1000);
+    } catch (err) {
+      console.error('Drop error:', err);
+    }
   };
+
+  // Handle touch drop events (mobile)
+  const handleTouchDrop = useCallback((e: Event, targetBoxId: string) => {
+    try {
+      const customEvent = e as CustomEvent;
+      const { itemId } = customEvent.detail || {};
+      
+      if (!itemId) return;
+      
+      setDragOverBoxId(null);
+      setDroppedBoxId(targetBoxId);
+      
+      onDropItem(itemId, targetBoxId);
+      
+      // Reset dropped state after animation
+      setTimeout(() => setDroppedBoxId(null), 1000);
+    } catch (err) {
+      console.error('Touch drop error:', err);
+    }
+  }, [onDropItem]);
+
+  // Set up and clean up touch drop event listeners
+  const setupEventListener = useCallback((element: HTMLDivElement, boxId: string) => {
+    // Remove existing handler if any
+    const existingHandler = handlersRef.current.get(boxId);
+    if (existingHandler && element) {
+      try {
+        element.removeEventListener('touchdrop', existingHandler);
+      } catch {
+        // Element might not exist anymore
+      }
+    }
+    
+    // Add new handler
+    const handler = (e: Event) => handleTouchDrop(e, boxId);
+    handlersRef.current.set(boxId, handler);
+    
+    if (element) {
+      element.addEventListener('touchdrop', handler);
+    }
+  }, [handleTouchDrop]);
+
+  const setDropZoneRef = useCallback((element: HTMLDivElement | null, boxId: string) => {
+    if (element) {
+      dropZoneRefs.current.set(boxId, element);
+      setupEventListener(element, boxId);
+    } else {
+      // Clean up when element is removed
+      const existingElement = dropZoneRefs.current.get(boxId);
+      const existingHandler = handlersRef.current.get(boxId);
+      
+      if (existingElement && existingHandler) {
+        try {
+          existingElement.removeEventListener('touchdrop', existingHandler);
+        } catch {
+          // Element might already be removed
+        }
+      }
+      
+      dropZoneRefs.current.delete(boxId);
+      handlersRef.current.delete(boxId);
+    }
+  }, [setupEventListener]);
+
+  // Clean up all event listeners on unmount
+  useEffect(() => {
+    return () => {
+      handlersRef.current.forEach((handler, boxId) => {
+        const element = dropZoneRefs.current.get(boxId);
+        if (element) {
+          try {
+            element.removeEventListener('touchdrop', handler);
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+      });
+      handlersRef.current.clear();
+      dropZoneRefs.current.clear();
+    };
+  }, []);
 
   return (
     <AnimatePresence>
@@ -69,6 +157,8 @@ export const DroppableBoxZone: React.FC<DroppableBoxZoneProps> = ({
               {otherBoxes.map((box) => (
                 <div
                   key={box.id}
+                  ref={(el) => setDropZoneRef(el, box.id)}
+                  data-drop-zone={box.id}
                   onDragOver={(e) => handleDragOver(e, box.id)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, box.id)}
