@@ -15,20 +15,22 @@ export default function LandingPage() {
 
   const hasData = rooms.length > 0;
 
-  const loadDemoData = () => {
+  const loadDemoData = async () => {
+    setDemoLoaded(true);
+    
     // Create demo rooms
-    const livingRoom = createRoom('Living Room', 'Main living area with entertainment setup');
-    const garage = createRoom('Garage', 'Storage and tools');
-    const bedroom = createRoom('Master Bedroom', 'Clothes and personal items');
+    const livingRoom = await createRoom('Living Room', 'Main living area with entertainment setup');
+    const garage = await createRoom('Garage', 'Storage and tools');
+    const bedroom = await createRoom('Master Bedroom', 'Clothes and personal items');
 
     // Create demo boxes
-    const electronicsBox = createBox(livingRoom.id, 'Electronics Box', 'Gaming consoles and accessories');
-    const toolsBox = createBox(garage.id, 'Tool Box', 'Hand tools and power tools');
-    const winterBox = createBox(bedroom.id, 'Winter Clothes', 'Seasonal clothing storage');
-    const booksBox = createBox(livingRoom.id, 'Books & Media', 'Books, DVDs, and magazines');
+    const electronicsBox = await createBox(livingRoom.id, 'Electronics Box', 'Gaming consoles and accessories');
+    const toolsBox = await createBox(garage.id, 'Tool Box', 'Hand tools and power tools');
+    const winterBox = await createBox(bedroom.id, 'Winter Clothes', 'Seasonal clothing storage');
+    const booksBox = await createBox(livingRoom.id, 'Books & Media', 'Books, DVDs, and magazines');
 
     // Create demo items
-    createItem(electronicsBox.id, {
+    await createItem(electronicsBox.id, {
       name: 'PlayStation 5',
       description: 'Gaming console with 2 controllers',
       quantity: 1,
@@ -37,7 +39,7 @@ export default function LandingPage() {
       notes: 'Purchased Dec 2023',
     });
 
-    createItem(electronicsBox.id, {
+    await createItem(electronicsBox.id, {
       name: 'Nintendo Switch',
       description: 'Portable gaming console',
       quantity: 1,
@@ -46,7 +48,7 @@ export default function LandingPage() {
       notes: 'OLED model',
     });
 
-    createItem(toolsBox.id, {
+    await createItem(toolsBox.id, {
       name: 'Cordless Drill',
       description: 'DeWalt 20V MAX',
       quantity: 1,
@@ -55,7 +57,7 @@ export default function LandingPage() {
       notes: 'Includes 2 batteries',
     });
 
-    createItem(toolsBox.id, {
+    await createItem(toolsBox.id, {
       name: 'Screwdriver Set',
       description: 'Phillips and flathead assortment',
       quantity: 24,
@@ -63,7 +65,7 @@ export default function LandingPage() {
       tags: ['hand tools'],
     });
 
-    createItem(winterBox.id, {
+    await createItem(winterBox.id, {
       name: 'Winter Jacket',
       description: 'North Face parka',
       quantity: 1,
@@ -72,7 +74,7 @@ export default function LandingPage() {
       notes: 'Size Large',
     });
 
-    createItem(winterBox.id, {
+    await createItem(winterBox.id, {
       name: 'Wool Sweaters',
       description: 'Assorted colors',
       quantity: 5,
@@ -80,7 +82,7 @@ export default function LandingPage() {
       tags: ['clothing', 'winter'],
     });
 
-    createItem(booksBox.id, {
+    await createItem(booksBox.id, {
       name: 'Programming Books',
       description: 'JavaScript, React, and TypeScript guides',
       quantity: 12,
@@ -88,8 +90,7 @@ export default function LandingPage() {
       tags: ['books', 'tech', 'learning'],
     });
 
-    setDemoLoaded(true);
-    setTimeout(() => router.push('/dashboard'), 500);
+    router.push('/dashboard');
   };
 
   const features = [

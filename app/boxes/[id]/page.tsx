@@ -90,8 +90,8 @@ export default function BoxDetailPage() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-  const handleCreate = (data: any) => {
-    createItem(boxId, data);
+  const handleCreate = async (data: any) => {
+    await createItem(boxId, data);
     success(`Item "${data.name}" created successfully`);
     setIsCreateModalOpen(false);
   };
@@ -101,19 +101,19 @@ export default function BoxDetailPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = (data: any) => {
+  const handleUpdate = async (data: any) => {
     if (editingItem) {
-      updateItem(editingItem, data);
+      await updateItem(editingItem, data);
       success(`Item "${data.name}" updated successfully`);
       setIsEditModalOpen(false);
       setEditingItem(null);
     }
   };
 
-  const handleDelete = (itemId: string) => {
+  const handleDelete = async (itemId: string) => {
     const item = items.find(i => i.id === itemId);
     if (confirm('Are you sure you want to delete this item?')) {
-      deleteItem(itemId);
+      await deleteItem(itemId);
       success(`Item "${item?.name}" deleted`);
     }
   };
@@ -146,13 +146,13 @@ export default function BoxDetailPage() {
     setSelectedItems([]);
   };
 
-  const handleShare = () => {
-    const share = createShare('box', boxId);
+  const handleShare = async () => {
+    await createShare('box', boxId);
     setIsShareModalOpen(true);
   };
 
-  const handleDropItem = (itemId: string, targetBoxId: string) => {
-    updateItem(itemId, { boxId: targetBoxId });
+  const handleDropItem = async (itemId: string, targetBoxId: string) => {
+    await updateItem(itemId, { boxId: targetBoxId });
     const item = items.find(i => i.id === itemId);
     const targetBox = boxes.find(b => b.id === targetBoxId);
     if (item && targetBox) {

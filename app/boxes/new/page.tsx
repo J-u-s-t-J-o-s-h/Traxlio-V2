@@ -13,8 +13,8 @@ export default function NewBoxPage() {
   const { rooms, createBox } = useInventory();
   const { success } = useToast();
 
-  const handleSubmit = (data: { roomId: string; name: string; description?: string }) => {
-    const box = createBox(data.roomId, data.name, data.description);
+  const handleSubmit = async (data: { roomId: string; name: string; description?: string }) => {
+    const box = await createBox(data.roomId, data.name, data.description);
     success(`Box "${box.name}" created successfully`);
     router.push(`/boxes/${box.id}`);
   };

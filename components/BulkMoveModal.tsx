@@ -47,9 +47,9 @@ export const BulkMoveModal: React.FC<BulkMoveModalProps> = ({
     setIsMoving(true);
     
     // Move all items to the target box
-    selectedItems.forEach(item => {
-      updateItem(item.id, { boxId: targetBoxId });
-    });
+    await Promise.all(
+      selectedItems.map(item => updateItem(item.id, { boxId: targetBoxId }))
+    );
 
     const targetBox = boxes.find(b => b.id === targetBoxId);
     success(`Moved ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''} to "${targetBox?.name}"`);

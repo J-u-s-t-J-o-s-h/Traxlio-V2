@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { InventoryProvider } from "@/context/InventoryContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { Header } from "@/components/Header";
 import { SearchModal } from "@/components/SearchModal";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -38,11 +39,13 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <ToastProvider>
-        <InventoryProvider>
-          <Header />
-          <SearchModal />
-          {children}
-        </InventoryProvider>
+            <AuthProvider>
+              <InventoryProvider>
+                <Header />
+                <SearchModal />
+                {children}
+              </InventoryProvider>
+            </AuthProvider>
           </ToastProvider>
         </ThemeProvider>
       </body>

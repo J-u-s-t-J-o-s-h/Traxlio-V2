@@ -59,8 +59,8 @@ export default function RoomsPage() {
       return sortDirection === 'asc' ? comparison : -comparison;
     });
 
-  const handleCreate = (data: { name: string; description?: string }) => {
-    createRoom(data.name, data.description);
+  const handleCreate = async (data: { name: string; description?: string }) => {
+    await createRoom(data.name, data.description);
     success(`Room "${data.name}" created successfully`);
     setIsCreateModalOpen(false);
   };
@@ -70,19 +70,19 @@ export default function RoomsPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = (data: { name: string; description?: string }) => {
+  const handleUpdate = async (data: { name: string; description?: string }) => {
     if (editingRoom) {
-      updateRoom(editingRoom, data);
+      await updateRoom(editingRoom, data);
       success(`Room "${data.name}" updated successfully`);
       setIsEditModalOpen(false);
       setEditingRoom(null);
     }
   };
 
-  const handleDelete = (roomId: string) => {
+  const handleDelete = async (roomId: string) => {
     const room = rooms.find(r => r.id === roomId);
     if (confirm('Are you sure you want to delete this room? All boxes and items in this room will also be deleted.')) {
-      deleteRoom(roomId);
+      await deleteRoom(roomId);
       success(`Room "${room?.name}" deleted`);
     }
   };

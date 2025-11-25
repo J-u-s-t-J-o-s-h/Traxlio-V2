@@ -13,8 +13,8 @@ export default function NewRoomPage() {
   const { createRoom } = useInventory();
   const { success } = useToast();
 
-  const handleSubmit = (data: { name: string; description?: string }) => {
-    const room = createRoom(data.name, data.description);
+  const handleSubmit = async (data: { name: string; description?: string }) => {
+    const room = await createRoom(data.name, data.description);
     success(`Room "${room.name}" created successfully`);
     router.push(`/rooms/${room.id}`);
   };

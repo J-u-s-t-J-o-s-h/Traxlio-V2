@@ -30,8 +30,8 @@ export default function EditBoxPage() {
     );
   }
 
-  const handleSubmit = (data: { roomId: string; name: string; description?: string }) => {
-    updateBox(boxId, data);
+  const handleSubmit = async (data: { roomId: string; name: string; description?: string }) => {
+    await updateBox(boxId, data);
     success(`Box "${data.name}" updated successfully`);
     router.push(`/boxes/${boxId}`);
   };

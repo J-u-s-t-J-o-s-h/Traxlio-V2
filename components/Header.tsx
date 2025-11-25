@@ -6,30 +6,38 @@ import { GlobalSearch } from './GlobalSearch';
 import { Button } from './ui/Button';
 import { Modal } from './ui/Modal';
 import { motion } from 'framer-motion';
-import { Search, Menu, X, Home, Box, Settings } from 'lucide-react';
+import { Search, Menu, X, Home, Box, Settings, LogOut, LogIn, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { DataManager } from './DataManager';
+import { useAuth } from '@/context/AuthContext';
 
 export const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, signOut, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
 
   const isLandingPage = pathname === '/';
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
-  if (isLandingPage) {
-    return null; // Landing page has its own nav
+  if (isLandingPage || isAuthPage) {
+    return null; // Landing page and auth pages have their own nav
   }
 
   const navLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/rooms', label: 'Rooms', icon: Box },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -87,6 +95,28 @@ export const Header: React.FC = () => {
 
               {/* Theme Toggle */}
               <ThemeToggle />
+
+              {/* Auth Button - Desktop */}
+              {!isLoading && (
+                user ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="hidden sm:flex items-center gap-2"
+                    title="Sign Out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Link href="/login" className="hidden sm:block">
+                    <Button variant="outline" size="sm">
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Button>
+                  </Link>
+                )
+              )}
 
               {/* Search Button - Mobile */}
               <Button
@@ -149,6 +179,38 @@ export const Header: React.FC = () => {
                   <Settings className="h-5 w-5" />
                   Data Management
                 </button>
+                
+                {/* Auth - Mobile */}
+                {!isLoading && (
+                  user ? (
+                    <>
+                      <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
+                      <div className="flex items-center gap-3 px-3 py-2 text-slate-500 dark:text-slate-400">
+                        <User className="h-5 w-5" />
+                        <span className="text-sm truncate">{user.email}</span>
+                      </div>
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-red-500 hover:bg-red-500/10"
+                      >
+                        <LogOut className="h-5 w-5" />
+                        Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="border-t border-slate-200 dark:border-slate-700 my-2" />
+                      <Link
+                        href="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-emerald-500 hover:bg-emerald-500/10"
+                      >
+                        <LogIn className="h-5 w-5" />
+                        Sign In
+                      </Link>
+                    </>
+                  )
+                )}
               </nav>
             </motion.div>
           )}
@@ -177,5 +239,3 @@ export const Header: React.FC = () => {
     </>
   );
 };
-
-

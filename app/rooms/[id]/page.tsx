@@ -41,8 +41,8 @@ export default function RoomDetailPage() {
     );
   }
 
-  const handleCreate = (data: { roomId: string; name: string; description?: string }) => {
-    createBox(data.roomId, data.name, data.description);
+  const handleCreate = async (data: { roomId: string; name: string; description?: string }) => {
+    await createBox(data.roomId, data.name, data.description);
     success(`Box "${data.name}" created successfully`);
     setIsCreateModalOpen(false);
   };
@@ -52,25 +52,25 @@ export default function RoomDetailPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = (data: { roomId: string; name: string; description?: string }) => {
+  const handleUpdate = async (data: { roomId: string; name: string; description?: string }) => {
     if (editingBox) {
-      updateBox(editingBox, data);
+      await updateBox(editingBox, data);
       success(`Box "${data.name}" updated successfully`);
       setIsEditModalOpen(false);
       setEditingBox(null);
     }
   };
 
-  const handleDelete = (boxId: string) => {
+  const handleDelete = async (boxId: string) => {
     const box = boxes.find(b => b.id === boxId);
     if (confirm('Are you sure you want to delete this box? All items in this box will also be deleted.')) {
-      deleteBox(boxId);
+      await deleteBox(boxId);
       success(`Box "${box?.name}" deleted`);
     }
   };
 
-  const handleShare = () => {
-    const share = createShare('room', roomId);
+  const handleShare = async () => {
+    await createShare('room', roomId);
     setIsShareModalOpen(true);
   };
 
