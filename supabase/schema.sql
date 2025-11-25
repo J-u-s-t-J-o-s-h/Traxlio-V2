@@ -1,11 +1,59 @@
 -- Traxlio Database Schema for Supabase
 -- Run this in your Supabase SQL Editor to set up the database
+-- This script is safe to run multiple times
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- =============================================
+-- DROP EXISTING OBJECTS (for clean re-runs)
+-- =============================================
+
+-- Drop triggers first
+DROP TRIGGER IF EXISTS update_rooms_updated_at ON rooms;
+DROP TRIGGER IF EXISTS update_boxes_updated_at ON boxes;
+DROP TRIGGER IF EXISTS update_items_updated_at ON items;
+
+-- Drop policies
+DROP POLICY IF EXISTS "Users can view their own rooms" ON rooms;
+DROP POLICY IF EXISTS "Users can create their own rooms" ON rooms;
+DROP POLICY IF EXISTS "Users can update their own rooms" ON rooms;
+DROP POLICY IF EXISTS "Users can delete their own rooms" ON rooms;
+
+DROP POLICY IF EXISTS "Users can view their own boxes" ON boxes;
+DROP POLICY IF EXISTS "Users can create their own boxes" ON boxes;
+DROP POLICY IF EXISTS "Users can update their own boxes" ON boxes;
+DROP POLICY IF EXISTS "Users can delete their own boxes" ON boxes;
+
+DROP POLICY IF EXISTS "Users can view their own items" ON items;
+DROP POLICY IF EXISTS "Users can create their own items" ON items;
+DROP POLICY IF EXISTS "Users can update their own items" ON items;
+DROP POLICY IF EXISTS "Users can delete their own items" ON items;
+
+DROP POLICY IF EXISTS "Users can view their own shares" ON shares;
+DROP POLICY IF EXISTS "Anyone can view public shares" ON shares;
+DROP POLICY IF EXISTS "Users can create their own shares" ON shares;
+DROP POLICY IF EXISTS "Users can delete their own shares" ON shares;
+
+DROP POLICY IF EXISTS "Users can view their own activities" ON activities;
+DROP POLICY IF EXISTS "Users can create their own activities" ON activities;
+
+-- Drop tables (in correct order due to foreign keys)
+DROP TABLE IF EXISTS activities CASCADE;
+DROP TABLE IF EXISTS shares CASCADE;
+DROP TABLE IF EXISTS items CASCADE;
+DROP TABLE IF EXISTS boxes CASCADE;
+DROP TABLE IF EXISTS rooms CASCADE;
+
+-- Drop function
+DROP FUNCTION IF EXISTS update_updated_at_column();
+
+-- =============================================
+-- CREATE TABLES
+-- =============================================
+
 -- Rooms table
-CREATE TABLE IF NOT EXISTS rooms (
+CREATE TABLE rooms (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -15,7 +63,7 @@ CREATE TABLE IF NOT EXISTS rooms (
 );
 
 -- Boxes table
-CREATE TABLE IF NOT EXISTS boxes (
+CREATE TABLE boxes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
@@ -26,7 +74,7 @@ CREATE TABLE IF NOT EXISTS boxes (
 );
 
 -- Items table
-CREATE TABLE IF NOT EXISTS items (
+CREATE TABLE items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   box_id UUID NOT NULL REFERENCES boxes(id) ON DELETE CASCADE,
@@ -41,7 +89,7 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 -- Shares table
-CREATE TABLE IF NOT EXISTS shares (
+CREATE TABLE shares (
   id TEXT PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('room', 'box', 'item')),
@@ -52,7 +100,7 @@ CREATE TABLE IF NOT EXISTS shares (
 );
 
 -- Activities table
-CREATE TABLE IF NOT EXISTS activities (
+CREATE TABLE activities (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   action TEXT NOT NULL CHECK (action IN ('create', 'update', 'delete', 'move')),
@@ -63,24 +111,33 @@ CREATE TABLE IF NOT EXISTS activities (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_rooms_user_id ON rooms(user_id);
-CREATE INDEX IF NOT EXISTS idx_boxes_user_id ON boxes(user_id);
-CREATE INDEX IF NOT EXISTS idx_boxes_room_id ON boxes(room_id);
-CREATE INDEX IF NOT EXISTS idx_items_user_id ON items(user_id);
-CREATE INDEX IF NOT EXISTS idx_items_box_id ON items(box_id);
-CREATE INDEX IF NOT EXISTS idx_shares_user_id ON shares(user_id);
-CREATE INDEX IF NOT EXISTS idx_shares_resource_id ON shares(resource_id);
-CREATE INDEX IF NOT EXISTS idx_activities_user_id ON activities(user_id);
-CREATE INDEX IF NOT EXISTS idx_activities_created_at ON activities(created_at DESC);
+-- =============================================
+-- CREATE INDEXES
+-- =============================================
 
--- Row Level Security (RLS) Policies
--- Enable RLS on all tables
+CREATE INDEX idx_rooms_user_id ON rooms(user_id);
+CREATE INDEX idx_boxes_user_id ON boxes(user_id);
+CREATE INDEX idx_boxes_room_id ON boxes(room_id);
+CREATE INDEX idx_items_user_id ON items(user_id);
+CREATE INDEX idx_items_box_id ON items(box_id);
+CREATE INDEX idx_shares_user_id ON shares(user_id);
+CREATE INDEX idx_shares_resource_id ON shares(resource_id);
+CREATE INDEX idx_activities_user_id ON activities(user_id);
+CREATE INDEX idx_activities_created_at ON activities(created_at DESC);
+
+-- =============================================
+-- ENABLE ROW LEVEL SECURITY
+-- =============================================
+
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE boxes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE shares ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+
+-- =============================================
+-- CREATE RLS POLICIES
+-- =============================================
 
 -- Rooms policies
 CREATE POLICY "Users can view their own rooms" ON rooms
@@ -141,6 +198,10 @@ CREATE POLICY "Users can view their own activities" ON activities
 CREATE POLICY "Users can create their own activities" ON activities
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- =============================================
+-- CREATE FUNCTION & TRIGGERS
+-- =============================================
+
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -163,3 +224,7 @@ CREATE TRIGGER update_items_updated_at
   BEFORE UPDATE ON items
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- =============================================
+-- SUCCESS MESSAGE
+-- =============================================
+-- If you see this, the schema was created successfully!
