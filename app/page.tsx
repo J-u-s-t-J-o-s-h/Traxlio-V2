@@ -5,15 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/InventoryContext';
 import { Button } from '@/components/ui/Button';
 import { motion } from 'framer-motion';
-import { Box, Package, Home, ArrowRight, Sparkles, Shield, Zap, Share2 } from 'lucide-react';
+import { Box, Package, Home, ArrowRight, Sparkles, Shield, Zap, Share2, LogIn, UserPlus } from 'lucide-react';
+import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
 export default function LandingPage() {
   const router = useRouter();
   const { rooms, boxes, items, createRoom, createBox, createItem } = useInventory();
+  const { user, isConfigured } = useAuth();
   const [demoLoaded, setDemoLoaded] = useState(false);
 
   const hasData = rooms.length > 0;
+  const isLoggedIn = user !== null;
 
   const loadDemoData = async () => {
     setDemoLoaded(true);
@@ -143,11 +147,12 @@ export default function LandingPage() {
             <span className="text-2xl font-bold tracking-tight">Traxlio</span>
           </motion.div>
           
-          {hasData && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
+            {isLoggedIn ? (
               <Button
                 onClick={() => router.push('/dashboard')}
                 variant="outline"
@@ -155,8 +160,28 @@ export default function LandingPage() {
               >
                 Go to Dashboard
               </Button>
-            </motion.div>
-          )}
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button
+                    variant="ghost"
+                    className="text-slate-300 hover:text-white hover:bg-slate-800"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
+          </motion.div>
         </div>
       </nav>
 
@@ -261,7 +286,7 @@ export default function LandingPage() {
           ))}
         </motion.div>
 
-        {/* Demo Credentials Card */}
+        {/* Info Card */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,26 +298,31 @@ export default function LandingPage() {
               <div className="w-10 h-10 bg-violet-500/20 rounded-lg flex items-center justify-center">
                 <Shield className="h-5 w-5 text-violet-400" />
               </div>
-              <h3 className="text-xl font-semibold">Demo Mode</h3>
+              <h3 className="text-xl font-semibold">Secure & Private</h3>
             </div>
             <p className="text-slate-400 mb-6">
-              This app currently uses local storage for data persistence. Your data stays in your browser.
-              When Supabase is integrated, you'll be able to sign in with:
+              {isLoggedIn ? (
+                <>Your data is securely stored with Supabase and synced across devices.</>
+              ) : isConfigured ? (
+                <>Sign up for a free account to save your inventory to the cloud and access it from any device.</>
+              ) : (
+                <>Try the demo to explore the app! Data is stored locally in your browser.</>
+              )}
             </p>
-            <div className="bg-slate-900/50 rounded-xl p-4 font-mono text-sm space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Email:</span>
-                <span className="text-emerald-400">demo@traxlio.app</span>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                <span>Fast & Responsive</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Password:</span>
-                <span className="text-emerald-400">demo123!</span>
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <Shield className="h-4 w-4 text-emerald-500" />
+                <span>Row Level Security</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-400">
+                <Share2 className="h-4 w-4 text-cyan-500" />
+                <span>Easy Sharing</span>
               </div>
             </div>
-            <p className="text-slate-500 text-sm mt-4 flex items-center gap-2">
-              <Zap className="h-4 w-4 text-yellow-500" />
-              Click "Try Demo" above to load sample data and explore the app!
-            </p>
           </div>
         </motion.div>
       </main>
@@ -300,8 +330,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-slate-800 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm">
-          <p>Built with Next.js, Tailwind CSS, and Framer Motion</p>
-          <p className="mt-1">Ready for Supabase integration</p>
+          <p>Built with Next.js, Tailwind CSS, Framer Motion & Supabase</p>
         </div>
       </footer>
     </div>
