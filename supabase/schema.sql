@@ -39,6 +39,7 @@ CREATE TABLE boxes (
   room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
+  image TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

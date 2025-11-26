@@ -4,7 +4,7 @@ import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useInventory } from '@/context/InventoryContext';
 import { useToast } from '@/components/ui/Toast';
-import { BoxForm } from '@/components/BoxForm';
+import { BoxForm, BoxFormSubmitData } from '@/components/BoxForm';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -30,8 +30,13 @@ export default function EditBoxPage() {
     );
   }
 
-  const handleSubmit = async (data: { roomId: string; name: string; description?: string }) => {
-    await updateBox(boxId, data);
+  const handleSubmit = async (data: BoxFormSubmitData) => {
+    await updateBox(boxId, {
+      roomId: data.roomId,
+      name: data.name,
+      description: data.description,
+      image: data.image,
+    });
     success(`Box "${data.name}" updated successfully`);
     router.push(`/boxes/${boxId}`);
   };

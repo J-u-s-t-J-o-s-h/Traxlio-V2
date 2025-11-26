@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useInventory } from '@/context/InventoryContext';
 import { useToast } from '@/components/ui/Toast';
-import { BoxForm } from '@/components/BoxForm';
+import { BoxForm, BoxFormSubmitData } from '@/components/BoxForm';
 import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 
@@ -13,8 +13,8 @@ export default function NewBoxPage() {
   const { rooms, createBox } = useInventory();
   const { success } = useToast();
 
-  const handleSubmit = async (data: { roomId: string; name: string; description?: string }) => {
-    const box = await createBox(data.roomId, data.name, data.description);
+  const handleSubmit = async (data: BoxFormSubmitData) => {
+    const box = await createBox(data.roomId, data.name, data.description, data.image);
     success(`Box "${box.name}" created successfully`);
     router.push(`/boxes/${box.id}`);
   };

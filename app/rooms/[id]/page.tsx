@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useInventory } from '@/context/InventoryContext';
 import { useToast } from '@/components/ui/Toast';
 import { BoxCard } from '@/components/BoxCard';
-import { BoxForm } from '@/components/BoxForm';
+import { BoxForm, BoxFormSubmitData } from '@/components/BoxForm';
 import { ShareDialog } from '@/components/ShareDialog';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -41,8 +41,8 @@ export default function RoomDetailPage() {
     );
   }
 
-  const handleCreate = async (data: { roomId: string; name: string; description?: string }) => {
-    await createBox(data.roomId, data.name, data.description);
+  const handleCreate = async (data: BoxFormSubmitData) => {
+    await createBox(data.roomId, data.name, data.description, data.image);
     success(`Box "${data.name}" created successfully`);
     setIsCreateModalOpen(false);
   };
@@ -52,9 +52,14 @@ export default function RoomDetailPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdate = async (data: { roomId: string; name: string; description?: string }) => {
+  const handleUpdate = async (data: BoxFormSubmitData) => {
     if (editingBox) {
-      await updateBox(editingBox, data);
+      await updateBox(editingBox, {
+        roomId: data.roomId,
+        name: data.name,
+        description: data.description,
+        image: data.image,
+      });
       success(`Box "${data.name}" updated successfully`);
       setIsEditModalOpen(false);
       setEditingBox(null);

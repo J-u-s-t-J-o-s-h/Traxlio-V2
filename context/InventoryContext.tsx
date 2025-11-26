@@ -23,7 +23,7 @@ interface InventoryContextType {
   getRoom: (id: string) => Room | undefined;
   
   // Box operations
-  createBox: (roomId: string, name: string, description?: string) => Promise<Box>;
+  createBox: (roomId: string, name: string, description?: string, image?: string) => Promise<Box>;
   updateBox: (id: string, updates: Partial<Box>) => Promise<void>;
   deleteBox: (id: string) => Promise<void>;
   getBox: (id: string) => Box | undefined;
@@ -73,6 +73,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
     roomId: row.room_id,
     name: row.name,
     description: row.description,
+    image: row.image,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   });
@@ -265,13 +266,13 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
   }, [data.rooms]);
 
   // Box operations
-  const createBox = useCallback(async (roomId: string, name: string, description?: string): Promise<Box> => {
+  const createBox = useCallback(async (roomId: string, name: string, description?: string, image?: string): Promise<Box> => {
     const room = data.rooms.find(r => r.id === roomId);
     
     if (isUsingSupabase && supabase && user) {
       const { data: row, error } = await supabase
         .from('boxes')
-        .insert({ user_id: user.id, room_id: roomId, name, description })
+        .insert({ user_id: user.id, room_id: roomId, name, description, image })
         .select()
         .single();
       
@@ -286,6 +287,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         roomId,
         name,
         description,
+        image,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -305,6 +307,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       if (updates.name !== undefined) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.roomId !== undefined) updateData.room_id = updates.roomId;
+      if (updates.image !== undefined) updateData.image = updates.image;
       
       const { error } = await supabase
         .from('boxes')

@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Input, Textarea } from './ui/Input';
 import { Dropdown } from './ui/Dropdown';
 import { Button } from './ui/Button';
+import { SingleImageUpload } from './ui/ImageUpload';
 import { Box, Room } from '@/lib/types';
 
 const boxSchema = z.object({
@@ -17,10 +18,14 @@ const boxSchema = z.object({
 
 type BoxFormData = z.infer<typeof boxSchema>;
 
+export interface BoxFormSubmitData extends BoxFormData {
+  image?: string;
+}
+
 interface BoxFormProps {
   box?: Box;
   rooms: Room[];
-  onSubmit: (data: BoxFormData) => void;
+  onSubmit: (data: BoxFormSubmitData) => void;
   onCancel?: () => void;
   isLoading?: boolean;
 }
@@ -32,6 +37,8 @@ export const BoxForm: React.FC<BoxFormProps> = ({
   onCancel,
   isLoading,
 }) => {
+  const [image, setImage] = useState<string | undefined>(box?.image);
+  
   const {
     register,
     handleSubmit,
@@ -54,8 +61,20 @@ export const BoxForm: React.FC<BoxFormProps> = ({
     label: room.name,
   }));
 
+  const handleFormSubmit = (data: BoxFormData) => {
+    onSubmit({
+      ...data,
+      image,
+    });
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <SingleImageUpload
+        image={image}
+        onChange={setImage}
+        label="Box Photo (optional)"
+      />
       <Dropdown
         label="Room"
         options={roomOptions}
@@ -90,4 +109,3 @@ export const BoxForm: React.FC<BoxFormProps> = ({
     </form>
   );
 };
-
