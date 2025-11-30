@@ -13,18 +13,21 @@ import { Home, Box, Package, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { useTutorial } from '@/context/TutorialContext';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { rooms, boxes, items, isLoading } = useInventory();
   const { startTutorial } = useTutorial();
+  const { user } = useAuth();
 
   React.useEffect(() => {
     // Check if we should show tutorial
     const hasSeenTutorial = localStorage.getItem('has_seen_tutorial');
     const isDemoMode = document.cookie.includes('demo_mode=true');
 
-    if (isDemoMode && !hasSeenTutorial && !isLoading) {
+    // Show tutorial if user hasn't seen it AND (is in demo mode OR is logged in)
+    if (!hasSeenTutorial && !isLoading && (isDemoMode || user)) {
       // Small delay to ensure elements are rendered
       const timer = setTimeout(() => {
         startTutorial([
@@ -112,7 +115,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats - Compact on mobile, always 3 columns */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6 sm:mb-8" id="tutorial-stats">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8" id="tutorial-stats">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -218,9 +221,11 @@ export default function DashboardPage() {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Your First Room
               </Button>
-              <Button variant="outline" onClick={() => router.push('/')}>
-                Load Demo Data
-              </Button>
+              {!user && (
+                <Button variant="outline" onClick={() => router.push('/')}>
+                  Load Demo Data
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

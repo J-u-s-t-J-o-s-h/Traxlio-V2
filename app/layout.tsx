@@ -7,6 +7,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import { Header } from "@/components/Header";
 import { SearchModal } from "@/components/SearchModal";
 import { ToastProvider } from "@/components/ui/Toast";
+import { SettingsProvider } from "@/context/SettingsContext";
+import { NotificationManager } from "@/components/NotificationManager";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,15 +41,19 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <InventoryProvider>
-                <Header />
-                <SearchModal />
-                {children}
-              </InventoryProvider>
-            </AuthProvider>
-          </ToastProvider>
+          <SettingsProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <InventoryProvider>
+                  <Header />
+                  <SearchModal />
+                  <NotificationManager />
+                  <Toaster position="top-center" richColors />
+                  {children}
+                </InventoryProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

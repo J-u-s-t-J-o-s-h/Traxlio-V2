@@ -130,7 +130,7 @@ export function TutorialOverlay() {
                     position: 'absolute',
                     ...getPopoverStyle(),
                 }}
-                className="pointer-events-auto w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+                className="pointer-events-auto w-[calc(100vw-2rem)] sm:w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
             >
                 <div className="p-5">
                     <div className="flex justify-between items-start mb-3">
@@ -153,8 +153,8 @@ export function TutorialOverlay() {
                                 <div
                                     key={idx}
                                     className={`h-1.5 w-1.5 rounded-full transition-colors ${idx === currentStepIndex
-                                            ? 'bg-indigo-600 dark:bg-indigo-400'
-                                            : 'bg-slate-200 dark:bg-slate-700'
+                                        ? 'bg-indigo-600 dark:bg-indigo-400'
+                                        : 'bg-slate-200 dark:bg-slate-700'
                                         }`}
                                 />
                             ))}

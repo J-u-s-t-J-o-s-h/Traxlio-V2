@@ -4,13 +4,18 @@ import Link from 'next/link';
 import { TutorialProvider } from '@/context/TutorialContext';
 import { TutorialOverlay } from '@/components/tutorial/TutorialOverlay';
 
+import { createClient } from '@/lib/supabase/server';
+
 export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
     const cookieStore = await cookies();
-    const isDemoMode = cookieStore.get('demo_mode')?.value === 'true';
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const isDemoMode = cookieStore.get('demo_mode')?.value === 'true' && !user;
 
     return (
         <TutorialProvider>
