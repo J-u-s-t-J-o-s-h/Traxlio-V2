@@ -22,17 +22,27 @@ function deserialize(data: any): any {
 }
 
 export const storage = {
+  // Helper to get the correct storage backend
+  getStorage(): Storage {
+    if (typeof window === 'undefined') return {} as Storage; // Fallback for SSR
+
+    // Check if we are in demo mode
+    const isDemoMode = document.cookie.includes('demo_mode=true');
+    return isDemoMode ? sessionStorage : localStorage;
+  },
+
   // Inventory data
   getInventory(): InventoryData {
     if (typeof window === 'undefined') {
       return { rooms: [], boxes: [], items: [], shares: [], activities: [] };
     }
-    
-    const data = localStorage.getItem(STORAGE_KEYS.INVENTORY);
+
+    const store = this.getStorage();
+    const data = store.getItem(STORAGE_KEYS.INVENTORY);
     if (!data) {
       return { rooms: [], boxes: [], items: [], shares: [], activities: [] };
     }
-    
+
     try {
       const parsed = JSON.parse(data);
       return {
@@ -49,7 +59,8 @@ export const storage = {
 
   saveInventory(data: InventoryData): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(serialize(data)));
+    const store = this.getStorage();
+    store.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(serialize(data)));
   },
 
   // Individual operations
@@ -141,7 +152,9 @@ export const storage = {
 
   clearAll(): void {
     if (typeof window === 'undefined') return;
-    this.saveInventory({ rooms: [], boxes: [], items: [], shares: [], activities: [] });
+    const store = this.getStorage();
+    // We only clear the inventory key, not everything in storage
+    store.removeItem(STORAGE_KEYS.INVENTORY);
   },
 
   addActivity(activity: Activity): void {

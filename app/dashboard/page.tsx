@@ -12,10 +12,51 @@ import { motion } from 'framer-motion';
 import { Home, Box, Package, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { useTutorial } from '@/context/TutorialContext';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { rooms, boxes, items, isLoading } = useInventory();
+  const { startTutorial } = useTutorial();
+
+  React.useEffect(() => {
+    // Check if we should show tutorial
+    const hasSeenTutorial = localStorage.getItem('has_seen_tutorial');
+    const isDemoMode = document.cookie.includes('demo_mode=true');
+
+    if (isDemoMode && !hasSeenTutorial && !isLoading) {
+      // Small delay to ensure elements are rendered
+      const timer = setTimeout(() => {
+        startTutorial([
+          {
+            targetId: 'tutorial-welcome',
+            title: 'Welcome to Inventory App',
+            description: 'This is your new dashboard. Let\'s take a quick tour to show you around.',
+            position: 'bottom',
+          },
+          {
+            targetId: 'tutorial-stats',
+            title: 'Inventory Stats',
+            description: 'Get a quick overview of all your rooms, boxes, and items at a glance.',
+            position: 'bottom',
+          },
+          {
+            targetId: 'tutorial-search',
+            title: 'Global Search',
+            description: 'Looking for something? Search across all your boxes and items instantly.',
+            position: 'bottom',
+          },
+          {
+            targetId: 'tutorial-quick-actions',
+            title: 'Quick Actions',
+            description: 'Ready to organize? Create new rooms and boxes with just one click.',
+            position: 'right',
+          },
+        ]);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, startTutorial]);
 
   if (isLoading) {
     return (
@@ -44,6 +85,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
           className="mb-8"
+          id="tutorial-welcome"
         >
           <div className="flex items-center justify-between">
             <div>
@@ -59,17 +101,18 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
           className="mb-8 relative z-20"
+          id="tutorial-search"
         >
           <Card className="p-2">
-            <GlobalSearch 
-              placeholder="Search for boxes, items, or tags..." 
+            <GlobalSearch
+              placeholder="Search for boxes, items, or tags..."
               className="[&_input]:border-0 [&_input]:bg-transparent [&_input]:focus:ring-0"
             />
           </Card>
         </motion.div>
 
         {/* Stats - Compact on mobile, always 3 columns */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6 sm:mb-8" id="tutorial-stats">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -99,7 +142,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.3, delay: 0.5 }}
           className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          <Card>
+          <Card id="tutorial-quick-actions">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Plus className="h-5 w-5 text-emerald-400" />
@@ -123,7 +166,7 @@ export default function DashboardPage() {
               </Button>
             </CardContent>
           </Card>
-          
+
           <RecentActivity limit={5} />
         </motion.div>
 

@@ -41,7 +41,10 @@ export async function updateSession(request: NextRequest) {
     (path) => request.nextUrl.pathname.startsWith(path)
   );
 
-  if (isProtectedPath && !user) {
+  // Check for demo mode cookie
+  const isDemoMode = request.cookies.get('demo_mode')?.value === 'true';
+
+  if (isProtectedPath && !user && !isDemoMode) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirect', request.nextUrl.pathname);

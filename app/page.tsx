@@ -9,6 +9,7 @@ import { Box, Package, Home, ArrowRight, Sparkles, Shield, Zap, Share2, LogIn, U
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
+import { storage } from '@/lib/storage';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -21,7 +22,12 @@ export default function LandingPage() {
 
   const loadDemoData = async () => {
     setDemoLoaded(true);
-    
+    // Set demo cookie to bypass auth middleware (session cookie, no max-age)
+    document.cookie = "demo_mode=true; path=/";
+
+    // Clear any existing session storage
+    storage.clearAll();
+
     // Create demo rooms
     const livingRoom = await createRoom('Living Room', 'Main living area with entertainment setup');
     const garage = await createRoom('Garage', 'Storage and tools');
@@ -146,7 +152,7 @@ export default function LandingPage() {
             />
             <span className="text-2xl font-bold tracking-tight">Traxlio</span>
           </motion.div>
-          
+
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -218,7 +224,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-slate-400 max-w-2xl mx-auto mb-10"
           >
-            Traxlio helps you organize and track your inventory across rooms, boxes, and storage locations. 
+            Traxlio helps you organize and track your inventory across rooms, boxes, and storage locations.
             Know exactly what you have and where it is.
           </motion.p>
 
@@ -228,37 +234,15 @@ export default function LandingPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            {hasData ? (
-              <Button
-                onClick={() => router.push('/dashboard')}
-                size="lg"
-                className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8"
-              >
-                Open Dashboard
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            ) : (
-              <>
-                <Button
-                  onClick={loadDemoData}
-                  size="lg"
-                  isLoading={demoLoaded}
-                  className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8"
-                >
-                  {demoLoaded ? 'Loading...' : 'Try Demo'}
-                  {!demoLoaded && <Sparkles className="ml-2 h-5 w-5" />}
-                </Button>
-                <Button
-                  onClick={() => router.push('/dashboard')}
-                  size="lg"
-                  variant="outline"
-                  className="border-slate-600 text-white hover:bg-slate-800 px-8"
-                >
-                  Start Fresh
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </>
-            )}
+            <Button
+              onClick={loadDemoData}
+              size="lg"
+              isLoading={demoLoaded}
+              className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white px-8"
+            >
+              {demoLoaded ? 'Loading...' : 'Try Demo'}
+              {!demoLoaded && <Sparkles className="ml-2 h-5 w-5" />}
+            </Button>
           </motion.div>
         </div>
 
