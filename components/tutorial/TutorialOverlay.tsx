@@ -62,11 +62,25 @@ export function TutorialOverlay() {
 
     // Calculate popover position
     const getPopoverStyle = () => {
+        // Mobile: Always fixed at bottom with safe margins
+        if (typeof window !== 'undefined' && window.innerWidth < 640) {
+            return {
+                bottom: '80px',
+                left: '16px',
+                right: '16px',
+                width: 'auto',
+                maxWidth: '400px',
+                margin: '0 auto', // Center if max-width is hit
+                position: 'fixed' as const,
+            };
+        }
+
         if (!targetRect) {
             return {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
+                position: 'absolute' as const,
             };
         }
 
@@ -79,24 +93,28 @@ export function TutorialOverlay() {
                     top: targetRect.top - gap,
                     left: targetRect.left + targetRect.width / 2,
                     transform: 'translate(-50%, -100%)',
+                    position: 'absolute' as const,
                 };
             case 'bottom':
                 return {
                     top: targetRect.bottom + gap,
                     left: targetRect.left + targetRect.width / 2,
                     transform: 'translate(-50%, 0)',
+                    position: 'absolute' as const,
                 };
             case 'left':
                 return {
                     top: targetRect.top + targetRect.height / 2,
                     left: targetRect.left - gap,
                     transform: 'translate(-100%, -50%)',
+                    position: 'absolute' as const,
                 };
             case 'right':
                 return {
                     top: targetRect.top + targetRect.height / 2,
                     left: targetRect.right + gap,
                     transform: 'translate(0, -50%)',
+                    position: 'absolute' as const,
                 };
         }
     };
@@ -104,7 +122,7 @@ export function TutorialOverlay() {
     return createPortal(
         <div className="fixed inset-0 z-[100] pointer-events-none">
             {/* Backdrop with cutout */}
-            <div className="absolute inset-0 bg-black/60 transition-colors duration-500">
+            <div className={`absolute inset-0 transition-colors duration-500 ${targetRect ? 'bg-transparent' : 'bg-black/40'}`}>
                 {targetRect && (
                     <div
                         style={{
@@ -113,7 +131,7 @@ export function TutorialOverlay() {
                             top: targetRect.top,
                             width: targetRect.width,
                             height: targetRect.height,
-                            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+                            boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)',
                             borderRadius: '8px',
                         }}
                         className="transition-all duration-300 ease-in-out"
@@ -126,11 +144,8 @@ export function TutorialOverlay() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 key={currentStepIndex}
-                style={{
-                    position: 'absolute',
-                    ...getPopoverStyle(),
-                }}
-                className="pointer-events-auto w-[calc(100vw-2rem)] sm:w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden"
+                style={getPopoverStyle()}
+                className="pointer-events-auto bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden sm:w-80"
             >
                 <div className="p-5">
                     <div className="flex justify-between items-start mb-3">

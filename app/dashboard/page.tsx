@@ -92,8 +92,8 @@ export default function DashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-              <p className="text-lg text-slate-600 dark:text-slate-400 mt-1">Welcome back! Here's your inventory overview.</p>
+              <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+              <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-400 mt-1">Welcome back! Here's your inventory overview.</p>
             </div>
           </div>
         </motion.div>

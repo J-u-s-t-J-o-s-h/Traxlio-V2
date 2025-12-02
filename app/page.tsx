@@ -27,6 +27,8 @@ export default function LandingPage() {
 
     // Clear any existing session storage
     storage.clearAll();
+    // Reset tutorial state so it shows every time demo is started
+    localStorage.removeItem('has_seen_tutorial');
 
     // Create demo rooms
     const livingRoom = await createRoom('Living Room', 'Main living area with entertainment setup');
